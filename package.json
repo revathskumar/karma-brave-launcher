@@ -8,7 +8,9 @@
   },
   "keywords": [
     "karma",
-    "brave"
+    "brave",
+    "karma-plugin",
+    "karma-launcher"
   ],
   "author": "Revath S Kumar <rsk@revathskumar.com> (http://blog.revathskumar.com)",
   "license": "MIT",
