@@ -1,0 +1,18 @@
+{
+  "name": "karma-brave-launcher",
+  "version": "1.0.0",
+  "description": "Brave browser launcher for karma",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "karma",
+    "brave"
+  ],
+  "author": "Revath S Kumar <rsk@revathskumar.com> (http://blog.revathskumar.com)",
+  "license": "MIT",
+  "dependencies": {
+    "which": "^1.2.12"
+  }
+}
