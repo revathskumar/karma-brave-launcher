@@ -3,7 +3,7 @@ var path = require('path');
 var which = require('which');
 
 var WINDOWS_EXE_DIRS = [process.env.LOCALAPPDATA, process.env.PROGRAMFILES, process.env['PROGRAMFILES(X86)']];
-var WINDOWS_SUBPATH = '\\Brave\\Application\\brave.exe';
+var WINDOWS_SUBPATH = '\\brave\\Brave.exe';
 var DARWIN_SUBPATH = 'Applications/Brave.app/Contents/MacOS/Brave';
 
 function getBin(command) {
@@ -44,7 +44,7 @@ function getPathToBraveOnWindows() {
   var windowsBraveDirectory;
 
   for (var i = 0; i < WINDOWS_EXE_DIRS.length; i++) {
-    windowsBraveDirectory = path.join(prefixes[i], WINDOWS_SUBPATH);
+    windowsBraveDirectory = path.join(WINDOWS_EXE_DIRS[i], WINDOWS_SUBPATH);
 
     if (fs.existsSync(windowsBraveDirectory)) {
       return windowsBraveDirectory;
@@ -54,8 +54,48 @@ function getPathToBraveOnWindows() {
   return windowsBraveDirectory;
 }
 
+function isJSFlags(flag) {
+  return flag.indexOf('--js-flags=') === 0;
+}
+
+function sanitizeJSFlags(flag) {
+  var test = /--js-flags=(['"])/.exec(flag);
+  if (!test) {
+    return flag;
+  }
+
+  var escapeChar = test[1];
+  var endExp = new RegExp(escapeChar + '$');
+  var startExp = new RegExp('--js-flags=' + escapeChar);
+  return flag.replace(startExp, '--js-flags=').replace(endExp, '');
+}
+
 function BraveBrowser(baseBrowserDecorator, args) {
-   baseBrowserDecorator(this);
+  baseBrowserDecorator(this);
+
+  // Blindly do the same option processing that karma-chrome-launcher does
+  var flags = args.flags || []
+  var userDataDir = args.braveDataDir || this._tempDir
+
+  this._getOptions = function(url) {
+    // Chromeium CLI options
+    // http://peter.sh/experiments/chromium-command-line-switches/
+    flags.forEach(function(flag, i) {
+      if (isJSFlags(flag)) {
+        flags[i] = sanitizeJSFlags(flag)
+      };
+    });
+
+    return [
+      '--user-data-dir=' + userDataDir,
+      '--no-default-browser-check',
+      '--no-first-run',
+      '--disable-default-apps',
+      '--disable-popup-blocking',
+      '--disable-translate',
+      '--disable-background-timer-throttling'
+    ].concat(flags, [url])
+  }
 }
 
 BraveBrowser.prototype = {
