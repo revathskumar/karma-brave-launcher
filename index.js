@@ -10,7 +10,6 @@ function getBin(command) {
   if (process.platform !== 'linux') {
     return null;
   }
-
   try {
     return which.sync(command);
   }
