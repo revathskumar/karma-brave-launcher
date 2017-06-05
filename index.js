@@ -54,48 +54,46 @@ function getPathToBraveOnWindows() {
   return windowsBraveDirectory;
 }
 
-function isJSFlags(flag) {
-  return flag.indexOf('--js-flags=') === 0;
-}
-
-function sanitizeJSFlags(flag) {
-  var test = /--js-flags=(['"])/.exec(flag);
-  if (!test) {
-    return flag;
-  }
-
-  var escapeChar = test[1];
-  var endExp = new RegExp(escapeChar + '$');
-  var startExp = new RegExp('--js-flags=' + escapeChar);
-  return flag.replace(startExp, '--js-flags=').replace(endExp, '');
-}
-
 function BraveBrowser(baseBrowserDecorator, args) {
   baseBrowserDecorator(this);
 
-  // Blindly do the same option processing that karma-chrome-launcher does
-  var flags = args.flags || []
-  var userDataDir = args.braveDataDir || this._tempDir
+  var flags = args.flags || [];
+  var userDataDir = args.dataDir || this._tempDir;
+  var startupSettings = args.startupSettings || {
+      settings: {
+        'general.check-default-on-startup': false
+      },
+      // While we are here, don't start it full screen
+      defaultWindowParams: {
+        width: 512,
+        height: 512,
+        x: 0,
+        y: 0
+      }
+    };
+
+  //
+  // Do the rather fragile task of "configuring" Brave by putting values
+  // into its session store. As this is not a public API, it is likely to
+  // break between releases!
+  //
+  var sessionFilePath = path.join(userDataDir, 'session-store-1');
+
+  if (!fs.existsSync(userDataDir)) {
+    fs.mkdirSync(userDataDir);
+  }
+
+  if (!fs.existsSync(sessionFilePath)) {
+    fs.writeFileSync(sessionFilePath, JSON.stringify(startupSettings));
+  }
 
   this._getOptions = function(url) {
-    // Chromeium CLI options
-    // http://peter.sh/experiments/chromium-command-line-switches/
-    flags.forEach(function(flag, i) {
-      if (isJSFlags(flag)) {
-        flags[i] = sanitizeJSFlags(flag)
-      };
-    });
-
-    return [
+    return flags.concat([
       '--user-data-dir=' + userDataDir,
-      '--no-default-browser-check',
-      '--no-first-run',
-      '--disable-default-apps',
-      '--disable-popup-blocking',
-      '--disable-translate',
-      '--disable-background-timer-throttling'
-    ].concat(flags, [url])
-  }
+      '--',
+      url,
+    ]);
+  };
 }
 
 BraveBrowser.prototype = {
