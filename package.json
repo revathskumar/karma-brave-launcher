@@ -1,6 +1,6 @@
 {
   "name": "karma-brave-launcher",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Brave browser launcher for karma",
   "main": "index.js",
   "scripts": {
