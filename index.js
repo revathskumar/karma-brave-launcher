@@ -4,7 +4,10 @@ var which = require('which');
 
 var WINDOWS_EXE_DIRS = [process.env.LOCALAPPDATA, process.env.PROGRAMFILES, process.env['PROGRAMFILES(X86)']];
 var WINDOWS_SUBPATH = '\\brave\\Brave.exe';
-var DARWIN_SUBPATH = 'Applications/Brave.app/Contents/MacOS/Brave';
+var DARWIN_SUBPATHS = [
+  'Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
+  'Applications/Brave.app/Contents/MacOS/Brave',
+];
 
 function getBin(command) {
   if (process.platform !== 'linux') {
@@ -21,15 +24,19 @@ function getBin(command) {
  * user's home directory, otherwise try to find it relative to the
  * root directory
  */
-function getPathToBraveOnDarwin(defaultPath) {
+function getPathToBraveOnDarwin() {
   if (process.platform !== 'darwin') {
     return;
   }
 
-  var homePath = path.join(process.env.HOME, DARWIN_SUBPATH);
-  var rootPath = path.join('/', DARWIN_SUBPATH);
-
-  return fs.existsSync(homePath) ? homePath : rootPath;
+  return DARWIN_SUBPATHS
+    .reduce(function (paths, DARWIN_SUBPATH) {
+      paths.push(path.join('/', DARWIN_SUBPATH), path.join(process.env.HOME, DARWIN_SUBPATH));
+      return paths;
+    }, [])
+    .find(function(fullPath) {
+      return fs.existsSync(fullPath);
+    });
 }
 
 /*
