@@ -2,8 +2,6 @@ var fs = require('fs');
 var path = require('path');
 var which = require('which');
 
-var WINDOWS_EXE_DIRS = [process.env.LOCALAPPDATA, process.env.PROGRAMFILES, process.env['PROGRAMFILES(X86)']];
-var WINDOWS_SUBPATH = '\\brave\\Brave.exe';
 var DARWIN_SUBPATHS = [
   'Applications/Brave Browser.app/Contents/MacOS/Brave Browser',
   'Applications/Brave.app/Contents/MacOS/Brave',
@@ -43,22 +41,25 @@ function getPathToBraveOnDarwin() {
  * On Windows, cycle through a set of special app locations, and look for it
  * relative to those
  */
+/*@Author Gabriel Aguiar*/
 function getPathToBraveOnWindows() {
   if (process.platform !== 'win32') {
-    return;
+    return null
+  }
+  var windowsBraveDirectory, i, prefix
+  var suffix = '\\BraveSoftware\\Brave-Browser' + chromeDirName + '\\Application\\brave.exe'
+  var prefixes = [process.env.LOCALAPPDATA, process.env.PROGRAMFILES, process.env['PROGRAMFILES(X86)']]
+
+  for (i = 0; i < prefixes.length; i++) {
+    prefix = prefixes[i]
+    try {
+      windowsBraveDirectory = path.join(prefix, suffix)
+      fs.accessSync(windowsBraveDirectory)
+      return windowsBraveDirectory
+    } catch (e) {}
   }
 
-  var windowsBraveDirectory;
-
-  for (var i = 0; i < WINDOWS_EXE_DIRS.length; i++) {
-    windowsBraveDirectory = path.join(WINDOWS_EXE_DIRS[i], WINDOWS_SUBPATH);
-
-    if (fs.existsSync(windowsBraveDirectory)) {
-      return windowsBraveDirectory;
-    }
-  }
-
-  return windowsBraveDirectory;
+  return windowsBraveDirectory
 }
 
 function BraveBrowser(baseBrowserDecorator, args) {
